@@ -1,5 +1,7 @@
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -18,14 +20,7 @@ public class WordChainTest {
 
     }
 
-    @Test
-    public void testLoadDictionary() throws Exception{
-        WordChain.loadDictionary(wordFile,3);
-        assertEquals(WordChain.wordToMasks.get("cat")[0], "*at");
-        assertEquals(WordChain.wordToMasks.get("cat")[2], "ca*");
-        assertTrue(WordChain.maskToWords.get("ca*").contains("cat"));
-        assertTrue(WordChain.maskToWords.get("*at").contains("cat"));
-    }
+
 
     @Test
     public void testFindEnd() throws Exception {
@@ -35,11 +30,19 @@ public class WordChainTest {
     @Test
     public void testFindShortestChain() throws Exception {
         List<String> shortestChain = WordChain.findShortestChain("cat", "dog", wordFile);
-        assertEquals(shortestChain.size(),4);
-        assertEquals("cat",shortestChain.get(3));
+        assertEquals(4,shortestChain.size());
+        assertEquals("cat", shortestChain.get(0));
+        long s =System.currentTimeMillis();
         shortestChain = WordChain.findShortestChain("mediocre", "meditate", wordFile);
-        assertEquals(shortestChain.size(),0);
-        shortestChain = WordChain.findShortestChain("cued", "gold", wordFile);
-        assertEquals(0,shortestChain.size());
+        System.out.println("completed in: "+(System.currentTimeMillis()-s));
+        assertEquals(0, shortestChain.size());
+        s = System.currentTimeMillis();
+        shortestChain = WordChain.findShortestChain("computer", "commonty", wordFile);
+        System.out.println("completed in: "+(System.currentTimeMillis()-s));
+        assertEquals(6, shortestChain.size());
+        s = System.currentTimeMillis();
+        shortestChain = WordChain.findShortestChain("monster", "smirkly", wordFile);
+        System.out.println("completed in: "+(System.currentTimeMillis()-s));
+        assertEquals(30,shortestChain.size());
     }
 }

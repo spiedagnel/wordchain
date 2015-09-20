@@ -7,9 +7,6 @@ import java.util.*;
  */
 public class  WordChain {
 
-    public static HashMap<String, String[]> wordToMasks = new HashMap<>();
-    public static HashMap<String, ArrayList<String>> maskToWords = new HashMap<>();
-
     public static String[] generateMasks(String word) {
         String[] masks = new String[word.length()];
         for (int i = 0; i < word.length(); i++) {
@@ -18,22 +15,28 @@ public class  WordChain {
         return masks;
     }
 
-    public static void loadDictionary(String path,int length) throws FileNotFoundException {
+    public static HashMap<String, ArrayList<String>>  loadDictionary(String path,int length) throws FileNotFoundException {
+        HashMap<String, ArrayList<String>> maskToWords = new HashMap<>();
+        long time = System.currentTimeMillis();
         Scanner sc = new Scanner(new File(path));
         while(sc.hasNextLine()){
             String word = sc.nextLine();
             if(word.length()==length) {
-                String[] masks = WordChain.generateMasks(word);
-                wordToMasks.put(word, masks);
+                String[] masks = generateMasks(word);
                 for (String mask : masks) {
-                    if (!maskToWords.containsKey(mask)) {
-                        maskToWords.put(mask, new ArrayList<>());
+                    ArrayList<String> words = maskToWords.get(mask);
+                    if (words==null) {
+                        words = new ArrayList<>();
+                        maskToWords.put(mask,words);
                     }
-                    maskToWords.get(mask).add(word);
+
+                    words.add(word);
                 }
             }
         }
         sc.close();
+        System.out.println("loaded in:"+(System.currentTimeMillis()-time));
+        return maskToWords;
     }
 
     public static class Node{
@@ -50,9 +53,8 @@ public class  WordChain {
 
 
     public static Node findEnd(String start, String end, String file) throws FileNotFoundException {
-        loadDictionary(file,start.length());
-        if(!wordToMasks.containsKey(start) || !wordToMasks.containsKey(end))
-            return null;
+        HashMap<String, ArrayList<String>> maskToWords = loadDictionary(file,start.length());
+
          Set<String> visited = new HashSet<>();
         Queue<Node> queue = new LinkedList<>();
         Node e = new Node(start, null);
@@ -60,15 +62,18 @@ public class  WordChain {
         queue.add(e);
         while(!queue.isEmpty()){
             Node r = queue.remove();
-            for (String mask : wordToMasks.get(r.word)){
-                for(String neighbour: maskToWords.get(mask)){
-                    if(!visited.contains(neighbour)){
-                        Node n = new Node(neighbour,r);
-                        if(neighbour.equalsIgnoreCase(end)){
-                            return n;
+            for (String mask : generateMasks(r.word)){
+                ArrayList<String> words = maskToWords.get(mask);
+                if(words!=null) {
+                    for (String neighbour : words) {
+                        if (!visited.contains(neighbour)) {
+                            Node n = new Node(neighbour, r);
+                            if (neighbour.equalsIgnoreCase(end)) {
+                                return n;
+                            }
+                            visited.add(neighbour);
+                            queue.add(n);
                         }
-                        visited.add(neighbour);
-                        queue.add(n);
                     }
                 }
             }
@@ -77,11 +82,11 @@ public class  WordChain {
     }
     public static List<String> findShortestChain(String start, String end, String file) throws FileNotFoundException {
         Node n = findEnd(start, end, file);
-        List<String> l = new ArrayList<>();
+        LinkedList<String> l = new LinkedList<>();
         while (n != null){
-            l.add(n.word);
+            l.push(n.word);
             n = n.parent;
         }
-        return l;
+        return  l;
     }
 }
